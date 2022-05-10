@@ -1,0 +1,94 @@
+---
+data-params:
+    data_dir: '~/pytorch_universal_trainer/data'
+    is_dev_file: True
+
+transformers-params:
+    mode: 'train'
+    continue_training: False
+    continue_training_path: ""
+    pretrained_model_dir: '~/facebook/bart-base'
+    model_dir: '~/pytorch_universal_trainer/models/bart_base_sst_baseline'
+    is_distributed: True
+    use_native_fp16: True
+    use_fairscale_optimizer_sharding: False
+    use_fairscale_model_sharding: False
+    use_fairscale_autowrap: False
+    use_fairscale_reshard_forward: False
+    num_loader_workers: 0
+    batch_size: 256
+    use_max_length: False
+    max_length: 200
+    num_epochs: 3
+    gradient_accumulation_steps: 1
+    log_steps_ratio: 10
+    save_steps_ratio: 1
+    learning_rate: 2e-05
+    warmup_proportion: 0.01
+    num_labels: 2
+
+dist-params:
+    nodes: 1
+    gpus: 2
+    current_node: 0
+    master_addr: '10.100.69.32' # insert your own master ip
+    master_port: '1234' # insert your own any available port number
+    
+## Based on the customizations you make with your model, you can add your own flags and make necessary changes in the code. This code is meant to be fully customizable yet retain the readability
+
+# For all the directories, the full path is recommended in distributed node with respect to your home dirs
+
+# is_dev_file flag is used if you want to use dev file for eval between epochs, set false if you only need training
+
+# If the mode is train, the model training will begin. If dev file is passed, there will be an eval loop after each epoch. 
+# If the mode is test, it will do an evaluation on the dev/test sets.
+# This trainer doesnt support predict mode, where there are no labels. It is straightforward to make a few changes in evaluate function for that, left upto the user!
+
+# continue_training indicates if you are continuing training from a previous checkpoint. In that case, you need to pass the actual checkpoint file path in the continue_training_path to load the weights. Make sure you copy the old logs somewhere, logs will be overwritten!!
+
+# pretrained_model_dir: Just the directory of the pretrained model. If using HF model, need to download the exact weights into a directory. Recommended for large scale distributed training. You might need to change a few things if you use a custom model, not pretrained, or maybe this flag wont be of much use. For custom model, make sure to use the right tokenizer too. 
+
+# model_dir: Directory where you want the model weights to be written. 
+
+# is_distributed: Simple Pytorch distributed training, each GPU will have its own process. Set use_fairscale_optimizer_sharding and use_fairscale_model_sharding to False for simple distributed training
+
+# use_native_fp16: Mixed precision float 16 training, helps a lot with GPU space for bigger models. it wont use Nvidia Apex but it would use pytorch native float16
+
+# use_fairscale_optimizer_sharding: Set it to True to Shard the optimizer weights across multiple GPUs. Extremely beneficial for "large" models. For smaller ones, difference is not noticiable. Need to set is_distributed to True to use this, and use_fairscale_model_sharding to False
+
+# use_fairscale_model_sharding: True does the full Fairscale FSDP: parameter, gradient and optimizer sharding. If using this, set is_distributed to True and use_fairscale_optimizer_sharding to False, since optimizer is sharded anyways here. Extremely beneficial for GPT-3 like models, not so much for smaller ones.
+
+# use_fairscale_autowrap: If you use_fairscale_model_sharding, set this to True. To read specifics, refer fairscale documentation
+# use_fairscale_reshard_forward: If you use_fairscale_model_sharding, set this to True. To read specifics, refer fairscale documentation
+
+# num_loader_workers: parameter for setting dataloader workers. Set it to 0 in is_distributed mode, since it interferes with torch distributed processes.
+
+# if use_max_length = True, it will try to use a predetermined src / tar length for truncation. During testing / inference, turn this is off!
+
+# batch_size is the overall batch size for normal DataParallel (which will be split evenly across GPUs), but for DistributedDataParallel it is actually the batch size per GPU! See explanation in data_loader.py
+
+# use_max_length: It is the truncation length for longer inputs. Depending on your dataloader / task, need to make changes there. Set to True for training usually. For evaluation, you usually want to use the whole length, but beware, might result in OOM errors on GPU for extremely large sequences or you may need to reduce the batch size
+# max_length: max length in tokens for the model input
+
+
+# num_epochs: number of epochs for training
+# gradient_accumulation_steps: If you want to mimic a larger batch size using gradient accumulation set it to more than 1. 
+# log_steps_ratio: Ratio of the total number of steps you want to log the loss. If total steps is 100 and log ratio is 10, it will log every 10 steps
+# save_steps_ratio: Ratio to save the model weights. I typically do it per epoch.
+
+# learning_rate: learning rate for the task. keep in mind that with larger batch size, you might need to use a bigger learning rate! If you double the batch size, double the learning rate! Specially beneficial tip when you scale a model across multiple nodes with large batch sizes. 
+# refer pytorch lightening creator's blog for more details! Need to play with that! There is no proven reason why?!
+
+# warmup_proportion: Ratio of the number of steps needed for warmpup. Usually set it to 0.01
+# num_labels: labels for the classification task. Need to change this if using it for a different task
+
+
+# nodes: Total number of nodes you are using. If you use 2 nodes with 8 GPUs each, nodes is 2
+
+# gpus: Number of GPUs per node, typically 8
+
+# current_node: from 0 to n-1. The current index of the node where you are running the script. Note for each node, you need to run the main.py script with the parameters.yml file as input.
+
+# master_addr: IP address of the main master node. There will only be one of them. If you are using 8 nodes, pick anyone as the master node and put the address here.
+# run ifconfig -a on the terminal of one of the nodes, if confused and copy the inet address. Note once again, there is only master node
+# master_port: Can use any available port.
