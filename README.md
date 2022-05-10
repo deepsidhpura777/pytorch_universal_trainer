@@ -191,7 +191,7 @@ That is all there is to the fairscale optimizations. It closely follows DDP and 
 
 ## Customizing the trainer for your tasks and general large scale training tips
 
-If you have reached this far, it means you are fairly comfortable with the trainer code and knwo the specifics of distributed training. This section is for guidance on how to customize this trainer for your own tasks!
+If you have reached this far, it means you are fairly comfortable with the trainer code and know the specifics of distributed training. This section is for guidance on how to customize this trainer for your own tasks!
 
 The trainer is designed to be re-usable for multiple different tasks with only a few necesary changes. In order to do that, carefully follow the **comments with ----->**, starting from the main.py file. Ideally only the
 data_loader, tokenizer and the model should change. For the evaluation loop, you can include your own metrics as well. In my opinion, all the changes you would need are marked with the **----->** comments. Other specifics
