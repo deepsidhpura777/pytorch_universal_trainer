@@ -1,0 +1,16 @@
+The user needs to download the model weights from https://huggingface.co/facebook/bart-base/tree/main and put them in this directory.
+
+Before beginning training, you should have the following files:
+
+config.json  
+
+merges.txt  
+
+pytorch_model.bin  
+
+tokenizer.json  
+
+vocab.json
+
+Caution: Without this directory and the files, the pretrained model weights and tokenizer cannot be loaded
+
