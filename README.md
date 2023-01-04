@@ -2,7 +2,7 @@
 
 This repository contains a simple, easy to read and highly customizable distributed universal trainer in Pytorch.
 The documentation is extremely verbose since it is meant as a tutorial as well! Please patiently read the whole thing
-to learn the stuff quickly!
+to learn the stuff quickly!!
 
 ## Introduction
 
